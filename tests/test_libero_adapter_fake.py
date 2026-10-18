@@ -176,6 +176,17 @@ def _build_adapter(
     return adapter, env, factory_kwargs
 
 
+def test_saved_init_mode_accepts_numpy_init_states(tmp_path) -> None:
+    """Pinned LIBERO suites load saved states as arrays with ambiguous truth values."""
+    adapter, env, _ = _build_adapter(tmp_path)
+    adapter.registry.init_states = np.array([0.1, 0.2, 0.3])
+
+    observation = adapter.reset(("libero_goal_task", 2), seed=2)
+
+    assert env.selected_init_state == pytest.approx(0.2)
+    assert observation.task_context.metadata["init_state_index"] == 1
+
+
 def test_seeded_init_mode_applies_no_saved_state_and_records_mode(tmp_path) -> None:
     """Seeded mode must leave the procedural placement from reset() intact.
 

@@ -13,3 +13,6 @@ artifacts/
 outputs/
 validation-output/
 .behavior-appdata/
+.env
+.env.*
+!.env.example

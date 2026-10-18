@@ -1,0 +1,24 @@
+{
+  "schema": "cap-harness/profile/1",
+  "name": "a40",
+  "arch": "sm_86",
+  "description": "Shared A40 host (Ampere, sm_86); simulation on GPU 0, providers on GPUs 4-6.",
+  "venv_root": null,
+  "gpus": {
+    "sam3": 4,
+    "contact_graspnet": 6,
+    "curobo": 5
+  },
+  "concurrency": {
+    "sam3": 1,
+    "contact_graspnet": 1,
+    "pyroki": 4,
+    "curobo": 1
+  },
+  "ports": {
+    "sam3": 8214,
+    "contact_graspnet": 8215,
+    "pyroki": 8216,
+    "curobo": 8218
+  }
+}

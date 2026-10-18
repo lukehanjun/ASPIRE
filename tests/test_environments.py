@@ -8,7 +8,7 @@ import pytest
 from cap_harness import environments
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PROFILES = ("rtx5090", "l40")
+PROFILES = ("rtx5090", "l40", "a40")
 
 
 def test_topology_loads_and_is_internally_consistent() -> None:
@@ -141,9 +141,10 @@ def test_bootstraps_use_canonical_repo_local_venv_paths() -> None:
         assert "venv_backing.sh" in text, name
 
 
-def test_doctor_service_targets_are_topology_driven() -> None:
+def test_doctor_service_targets_are_topology_driven(monkeypatch: pytest.MonkeyPatch) -> None:
     from cap_harness import doctor
 
+    monkeypatch.delenv("CAP_HARNESS_PROFILE", raising=False)
     default = doctor.topology_service_targets()
     names = [n for n, _ in default]
     # Default probes the always-on providers (not source-built curobo).
@@ -156,6 +157,14 @@ def test_doctor_service_targets_are_topology_driven() -> None:
         assert port == topo["providers"][name]["port"]
     with pytest.raises(ValueError):
         doctor.topology_service_targets(["nope"])
+
+
+def test_doctor_uses_the_active_profiles_ports(monkeypatch: pytest.MonkeyPatch) -> None:
+    from cap_harness import doctor
+
+    monkeypatch.setenv("CAP_HARNESS_PROFILE", "a40")
+    targets = dict(doctor.topology_service_targets(["sam3", "pyroki", "curobo"]))
+    assert targets == {"sam3": 8214, "pyroki": 8216, "curobo": 8218}
 
 
 def test_all_bootstraps_record_a_fingerprint_for_noop_rebuilds() -> None:

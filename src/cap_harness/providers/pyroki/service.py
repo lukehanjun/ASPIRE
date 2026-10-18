@@ -84,7 +84,9 @@ def _solve(request: IkRequest) -> IkResponse:
             status_code=400, detail="target_pose_wxyz_xyz must contain seven finite values"
         )
     if request.prev_cfg is None:
-        seed = np.zeros(_ROBOT.joints.num_actuated_joints, dtype=np.float64)
+        # Match PyRoki's normal initialization. The zero pose is outside the
+        # Panda's fourth-joint limits and can trap tabletop IK in a bad minimum.
+        seed = np.asarray(_ROBOT.joint_var_cls.default_factory(), dtype=np.float64)
     else:
         seed = np.asarray(request.prev_cfg, dtype=np.float64)
     expected = (_ROBOT.joints.num_actuated_joints,)

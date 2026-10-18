@@ -7,6 +7,10 @@ source "$REPO_ROOT/scripts/lib/fingerprint.sh"
 VENV_ROOT="${CAP_HARNESS_CUROBO_VENV:-$(resolve_canonical_venv "$REPO_ROOT" ".venv-curobo")}"
 UV_CACHE_ROOT="${CAP_HARNESS_CUROBO_CACHE:-/tmp/${USER:-root}/uv-cache-curobo}"
 PYTHON_BIN="${CAP_HARNESS_PYTHON:-/usr/bin/python3}"
+# PyPI's Warp 1.18 wheel uses CUDA 13 and cannot initialize on CUDA 12 hosts.
+# Keep the CUDA 12 build explicit, including its published release checksum:
+# https://nvidia.github.io/warp/latest/user_guide/installation.html
+WARP_WHEEL="https://github.com/NVIDIA/warp/releases/download/v1.18.0/warp_lang-1.18.0%2Bcu12-py3-none-manylinux_2_28_x86_64.whl#sha256=6dda3c163dde4edaa7d46ade9fff3ddb1126ee7b147d9d890cd38cc70dafd656"
 
 [[ "$(basename -- "$VENV_ROOT")" == ".venv-curobo" ]] || {
   printf 'error: cuRobo environment basename must be .venv-curobo: %s\n' "$VENV_ROOT" >&2
@@ -24,7 +28,7 @@ actual="$(git -C "$REPO_ROOT/third_party/curobo" rev-parse HEAD)"
 
 mkdir -p "$(dirname -- "$VENV_ROOT")" "$UV_CACHE_ROOT"
 # No-op re-bootstrap when the resolved deps, arch, and pins are unchanged.
-FINGERPRINT="$(compute_venv_fingerprint "$REPO_ROOT" "${CAP_HARNESS_PROFILE:-rtx5090}" "provider:curobo:source" "third_party/curobo")"
+FINGERPRINT="$(compute_venv_fingerprint "$REPO_ROOT" "${CAP_HARNESS_PROFILE:-rtx5090}" "provider:curobo:source:$WARP_WHEEL" "third_party/curobo")"
 if venv_fingerprint_current "$VENV_ROOT" "$FINGERPRINT"; then
   printf '%s is up to date (fingerprint %s); skipping rebuild\n' "provider:curobo:source" "${FINGERPRINT:0:12}"
   exit 0
@@ -34,14 +38,17 @@ UV_CACHE_DIR="$UV_CACHE_ROOT" uv pip install --python "$VENV_ROOT/bin/python" \
   'torch==2.9.1' 'torchvision==0.24.1' \
   fastapi pydantic requests uvicorn
 UV_CACHE_DIR="$UV_CACHE_ROOT" uv pip install --python "$VENV_ROOT/bin/python" \
-  --editable "$REPO_ROOT/third_party/curobo[cu12-torch]"
+  --editable "$REPO_ROOT/third_party/curobo[cu12-torch]" "$WARP_WHEEL"
 UV_CACHE_DIR="$UV_CACHE_ROOT" uv pip install --python "$VENV_ROOT/bin/python" \
   --editable "$REPO_ROOT" --no-deps
 
 CUDA_VISIBLE_DEVICES="${CAP_HARNESS_CUROBO_GPU:-3}" "$VENV_ROOT/bin/python" - <<'PY'
 import curobo
 import torch
+import warp
 assert torch.__version__.split("+", 1)[0] == "2.9.1"
+warp.init()
+assert warp.is_cuda_available(), "Warp cannot initialize CUDA on this host"
 print(f"Verified cuRobo runtime: torch={torch.__version__} module={curobo.__file__}")
 PY
 

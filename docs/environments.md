@@ -21,9 +21,10 @@ structural tests all resolve their configuration through
 `configs/profiles/<name>.json` binds the topology to hardware. A profile sets
 GPU placement, the build architecture (resolved against `gpu_runtime.arches` in
 `configs/dependency-lock.json`), bounded per-provider request concurrency,
-optional port overrides, and an optional node-local venv backing root. Two
-profiles ship: `rtx5090` (single Blackwell sm_120 GPU; providers share GPU 0
-with serialized access) and `l40` (multi-GPU Ada sm_89 node). Dependency
+optional port overrides, and an optional node-local venv backing root. Profiles
+include `rtx5090` (single Blackwell sm_120 GPU; providers share GPU 0
+with serialized access), `l40` (multi-GPU Ada sm_89 node), and `a40`
+(shared Ampere sm_86 host, with private provider ports; see [local setup](libero-a40.md)). Dependency
 *versions* are shared and hardware-neutral; only the build *target* is per-arch.
 
 ## Virtual environment paths

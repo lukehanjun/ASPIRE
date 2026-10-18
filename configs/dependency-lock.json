@@ -35,6 +35,12 @@
   },
   "gpu_runtime": {
     "arches": {
+      "sm_86": {
+        "cuda_arch_list": "8.6",
+        "profiles": [
+          "a40"
+        ]
+      },
       "sm_120": {
         "cuda_arch_list": "12.0",
         "profiles": [

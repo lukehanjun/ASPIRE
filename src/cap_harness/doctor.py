@@ -42,7 +42,7 @@ def topology_service_targets(
 
     With no names, returns the always-on providers (those not compiled from
     source). This keeps doctor embodiment-neutral and topology-driven: ports
-    live in configs/environments.json, not hard-coded here or in the CLI. Falls
+    live in configs/environments.json, with CAP_HARNESS_PROFILE port overrides. Falls
     back to the static DEFAULT_SERVICES if the topology cannot be read.
     """
     try:
@@ -56,11 +56,14 @@ def topology_service_targets(
         selected = [n for n, spec in providers.items() if not spec.get("source_build")]
     else:
         selected = list(names)
+    profile_name = os.environ.get("CAP_HARNESS_PROFILE")
+    profile = environments.load_profile(profile_name) if profile_name else {}
+    port_overrides = profile.get("ports", {})
     targets: list[tuple[str, int]] = []
     for name in selected:
         if name not in providers:
             raise ValueError(f"unknown provider {name!r}; known: {sorted(providers)}")
-        targets.append((name, int(providers[name]["port"])))
+        targets.append((name, int(port_overrides.get(name, providers[name]["port"]))))
     return tuple(targets)
 
 

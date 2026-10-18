@@ -11,8 +11,8 @@ from .artifacts import RunRecorder, StepLimitReached, TracedProvider, redact
 from .libero.adapter import LiberoAdapter
 from .libero.registry import LiberoSuiteRegistry
 from .providers.curobo.client import DEFAULT_CUROBO_URL, CuRoboProvider
-from .providers.graspnet.client import ContactGraspNetProvider
-from .providers.pyroki.client import PyRokiProvider
+from .providers.graspnet.client import DEFAULT_GRASPNET_URL, ContactGraspNetProvider
+from .providers.pyroki.client import DEFAULT_PYROKI_URL, PyRokiProvider
 from .providers.sam3.client import DEFAULT_SAM3_URL, Sam3Provider
 from .registry import ToolRegistry
 from .runtime import ProgramExecutionResult, ProgramExecutor
@@ -297,7 +297,13 @@ def run_program(
             recorder,
             "sam3",
         )
-        contact_graspnet = TracedProvider(ContactGraspNetProvider(), recorder, "contact_graspnet")
+        contact_graspnet = TracedProvider(
+            ContactGraspNetProvider(
+                base_url=os.environ.get("CAP_HARNESS_GRASPNET_URL", DEFAULT_GRASPNET_URL)
+            ),
+            recorder,
+            "contact_graspnet",
+        )
         if benchmark == "behavior":
             from .contracts import MotionStrategy
 
@@ -318,7 +324,13 @@ def run_program(
                 recorder=recorder,
             )
         else:
-            pyroki = TracedProvider(PyRokiProvider(), recorder, "pyroki")
+            pyroki = TracedProvider(
+                PyRokiProvider(
+                    base_url=os.environ.get("CAP_HARNESS_PYROKI_URL", DEFAULT_PYROKI_URL)
+                ),
+                recorder,
+                "pyroki",
+            )
             curobo = TracedProvider(
                 CuRoboProvider(
                     base_url=os.environ.get("CAP_HARNESS_CUROBO_URL", DEFAULT_CUROBO_URL),

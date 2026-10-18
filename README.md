@@ -100,6 +100,9 @@ my confirmation before launching. Do not access real-robot code or instructions
 
 Before running, set up the host (CUDA, uv, and the Hugging Face token for the gated SAM3 weights) with [`docs/host-setup.md`](docs/host-setup.md).
 
+See [environment architecture](docs/environments.md) for the simulator/provider layout and
+[the local A40 setup](docs/libero-a40.md) for activation and service commands on this host.
+
 **Reference agent environments:** ASPIRE is coding-agent agnostic. The simulation workflow is packaged as agent skills for Claude Code ([`.claude/skills/`](.claude/skills/)) and Codex ([`.codex/skills/`](.codex/skills/)): `iterative-debugging` and `evosearch`. [`AGENTS.md`](AGENTS.md) holds the execution rules for the real-robot System 2 agent ([operator runbook](docs/system2.md)) and is not needed for simulation runs.
 
 ### Reproduce full paper results

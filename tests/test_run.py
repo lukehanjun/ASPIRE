@@ -72,8 +72,8 @@ def _patch_run(monkeypatch, execution) -> None:
     monkeypatch.setattr(run_module, "RunRecorder", _Recorder)
     monkeypatch.setattr(run_module, "LiberoAdapter", _Adapter)
     monkeypatch.setattr(run_module, "Sam3Provider", lambda **kwargs: object())
-    monkeypatch.setattr(run_module, "ContactGraspNetProvider", lambda: object())
-    monkeypatch.setattr(run_module, "PyRokiProvider", lambda: object())
+    monkeypatch.setattr(run_module, "ContactGraspNetProvider", lambda **kwargs: object())
+    monkeypatch.setattr(run_module, "PyRokiProvider", lambda **kwargs: object())
     monkeypatch.setattr(run_module, "TracedProvider", lambda provider, *args: provider)
     monkeypatch.setattr(
         run_module,
@@ -245,7 +245,7 @@ def test_step_limit_still_asks_the_adapter_whether_the_task_succeeded(
 
 
 def test_run_points_providers_at_the_urls_in_the_environment(tmp_path, monkeypatch) -> None:
-    """CAP_HARNESS_CUROBO_URL/CAP_HARNESS_SAM3_URL must reach the provider constructors.
+    """Private service URLs must reach all provider constructors.
 
     The drawer README's private-planner procedure depended on this and it was a
     no-op: run.py built CuRoboProvider() with the default URL for every benchmark
@@ -269,6 +269,18 @@ def test_run_points_providers_at_the_urls_in_the_environment(tmp_path, monkeypat
     )
     monkeypatch.setenv("CAP_HARNESS_CUROBO_URL", "http://127.0.0.1:8120")
     monkeypatch.setenv("CAP_HARNESS_SAM3_URL", "http://127.0.0.1:8130")
+    monkeypatch.setattr(
+        run_module,
+        "PyRokiProvider",
+        lambda **kwargs: seen.setdefault("pyroki", kwargs) and object(),
+    )
+    monkeypatch.setattr(
+        run_module,
+        "ContactGraspNetProvider",
+        lambda **kwargs: seen.setdefault("graspnet", kwargs) and object(),
+    )
+    monkeypatch.setenv("CAP_HARNESS_PYROKI_URL", "http://127.0.0.1:8140")
+    monkeypatch.setenv("CAP_HARNESS_GRASPNET_URL", "http://127.0.0.1:8150")
     program = tmp_path / "policy.py"
     program.write_text("result = 1", encoding="utf-8")
 
@@ -285,6 +297,8 @@ def test_run_points_providers_at_the_urls_in_the_environment(tmp_path, monkeypat
     assert outcome.program_ok
     assert seen["curobo"]["base_url"] == "http://127.0.0.1:8120"
     assert seen["sam3"]["base_url"] == "http://127.0.0.1:8130"
+    assert seen["pyroki"]["base_url"] == "http://127.0.0.1:8140"
+    assert seen["graspnet"]["base_url"] == "http://127.0.0.1:8150"
 
 
 def test_bimanual_protocol_is_captured_before_adapter_close(tmp_path, monkeypatch) -> None:

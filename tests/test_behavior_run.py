@@ -101,7 +101,7 @@ def wired(monkeypatch, tmp_path):
     monkeypatch.setattr(adapter_module, "BehaviorAdapter", _Adapter)
     monkeypatch.setattr(witness_module, "BehaviorPickupWitness", _Witness)
     monkeypatch.setattr(run_module, "Sam3Provider", lambda **kwargs: object())
-    monkeypatch.setattr(run_module, "ContactGraspNetProvider", lambda: object())
+    monkeypatch.setattr(run_module, "ContactGraspNetProvider", lambda **kwargs: object())
     monkeypatch.setattr(run_module, "PyRokiProvider", lambda: pytest.fail("PyRoKi is not used"))
     monkeypatch.setattr(
         run_module, "CuRoboProvider", lambda **kwargs: pytest.fail("HTTP cuRobo is not used")
